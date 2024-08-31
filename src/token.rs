@@ -1,25 +1,21 @@
 use std::fmt;
-use crate::literal::Literal;
 
 pub enum Token {
-    LeftParen{lexeme : String, literal : Literal, line: u32},
-    RightParen{lexeme : String, literal : Literal, line: u32},
-    EndOfFile
+	LeftParen(String, u32, u32),
+	RightParen(String, u32, u32),
+	LeftBrace(String, u32, u32),
+	RightBrace(String, u32, u32),
+	EndOfFile,
 }
 
 impl fmt::Display for Token {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Token::LeftParen { lexeme, literal, line } => {
-                write!(f, "{} {} {}", "LEFT_PAREN", lexeme, literal)
-            },
-            Token::RightParen {lexeme, literal, line } => {
-                write!(f, "{} {} {}", "RIGHT_PAREN", lexeme, literal)
-            },
-            Token::EndOfFile => {
-                write!(f, "EOF  null")
-            }
-        }
-        
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Token::LeftParen(lexeme, line, col) => write!(f, "{} {} {}", "LEFT_PAREN", lexeme, "null"),
+			Token::RightParen(lexeme, line, col) => write!(f, "{} {} {}", "RIGHT_PAREN", lexeme, "null"),
+			Token::LeftBrace(lexeme, line, col) => write!(f, "{} {} {}", "LEFT_BRACE", lexeme, "null"),
+			Token::RightBrace(lexeme, line, col) => write!(f, "{} {} {}", "RIGHT_BRACE", lexeme, "null"),
+			Token::EndOfFile => { write!(f, "EOF  null") }
+		}
+	}
 }
