@@ -53,7 +53,7 @@ impl Tokenizer {
                 'A'..='z' => {
                     let identifier: String = iter::once(ch)
                         .chain(std::iter::from_fn(|| {
-                            iter.by_ref().next_if(|c| c.is_alphabetic())
+                            iter.by_ref().next_if(|c| c.is_alphanumeric())
                         }))
                         .collect::<String>()
                         .parse()?;
@@ -67,12 +67,16 @@ impl Tokenizer {
                     line += 1;
                     col = 0;
                 }
+                '\r' => {}
                 _ => {
                     tokens.push(Token::Error(format!(
                         "[line 1] Error: Unexpected character: {}",
                         ch
                     )));
-                    //writeln!("[line 1] Error: Unexpected character: {}", c);
+                    // println!(
+                    //     "[line 1] Error: Unexpected character: {}",
+                    //     ch.escape_debug()
+                    // );
                 }
             }
         }
