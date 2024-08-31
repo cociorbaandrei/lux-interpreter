@@ -27,6 +27,16 @@ impl Tokenizer {
 				')' => tokens.push(Token::RightParen(c.to_string(), line, col)),
 				'{' => tokens.push(Token::LeftBrace(c.to_string(), line, col)),
 				'}' => tokens.push(Token::RightBrace(c.to_string(), line, col)),
+				'*' => tokens.push(Token::Star(c.to_string(), line, col)),
+				'.' => tokens.push(Token::Dot(c.to_string(), line, col)),
+				',' => tokens.push(Token::Comma(c.to_string(), line, col)),
+				'+' => tokens.push(Token::Plus(c.to_string(), line, col)),
+				'-' => tokens.push(Token::Minus(c.to_string(), line, col)),
+				';' => tokens.push(Token::Semicolon(c.to_string(), line, col)),
+				'/' => tokens.push(Token::Divide(c.to_string(), line, col)),
+				' ' => {
+					col += 1;
+				}
 				'\n' => {
 					line += 1;
 					col = 0;
