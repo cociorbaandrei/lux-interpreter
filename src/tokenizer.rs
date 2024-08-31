@@ -9,13 +9,10 @@ pub struct Tokenizer {
 }
 
 impl Tokenizer {
-	pub fn new(file_content: String) -> Result<Tokenizer> {
-		if file_content.is_empty() {
-			return Err(anyhow!("Input file should not be empty!"));
-		}
-		return Ok(Tokenizer {
+	pub fn new(file_content: String) -> Tokenizer {
+		return Tokenizer {
 			file_content: file_content,
-		});
+		};
 	}
 	pub fn get_tokens(&self) -> Result<Vec<Token>> {
 		let mut tokens: Vec<Token> = Vec::new();
@@ -42,7 +39,8 @@ impl Tokenizer {
 					col = 0;
 				}
 				_ => {
-					println!("What");
+					tokens.push(Token::Error(format!("[line 1] Error: Unexpected character: {}", c)));
+					//writeln!("[line 1] Error: Unexpected character: {}", c);
 				}
 			}
 			col += 1;
