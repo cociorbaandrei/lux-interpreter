@@ -1,13 +1,10 @@
-use anyhow::Ok;
-use anyhow::{Context, Result};
-use anyhow::anyhow;
 use std::fmt;
-use std::path::Display;
 use crate::literal::Literal;
 
 pub enum Token {
     LeftParen{lexeme : String, literal : Literal, line: u32},
-    RightParen{lexeme : String, literal : Literal, line: u32}
+    RightParen{lexeme : String, literal : Literal, line: u32},
+    EndOfFile
 }
 
 impl fmt::Display for Token {
@@ -18,6 +15,9 @@ impl fmt::Display for Token {
             },
             Token::RightParen {lexeme, literal, line } => {
                 write!(f, "{} {} {}", "RIGHT_PAREN", lexeme, literal)
+            },
+            Token::EndOfFile => {
+                write!(f, "EOF  null")
             }
         }
         

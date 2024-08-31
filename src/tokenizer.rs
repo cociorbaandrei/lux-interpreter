@@ -2,10 +2,8 @@ use crate::literal::Literal;
 use crate::token::Token;
 
 use anyhow::Ok;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use anyhow::anyhow;
-use std::fmt;
-use std::path::Display;
 
 
 pub struct Tokenizer{
@@ -17,11 +15,32 @@ impl Tokenizer {
         if file_content.is_empty() {
             return Err(anyhow!("Input file should not be empty!"));
         }
-        return Ok(Tokenizer{file_content:"".to_owned()});
+        return Ok(Tokenizer{file_content:file_content});
     }
     pub fn get_tokens(&self) -> Result<Vec<Token>> {
         let mut tokens : Vec<Token> = Vec::new();
-        tokens.push(Token::LeftParen { lexeme: "(".to_owned(), literal: Literal::None, line: 2 });
+        let mut line : u32 = 0;
+        let mut col : u32 = 0;
+        for c in self.file_content.chars() {
+            match c {
+                '(' => {
+                    tokens.push(Token::LeftParen { lexeme: c.to_string(), literal: Literal::None, line: line });
+                },
+                ')' => {
+                    tokens.push(Token::RightParen { lexeme: c.to_string(), literal: Literal::None, line: line });
+                }
+                '\n' => {
+                    line += 1;
+                    col = 0;
+                }
+                _ => {
+                    println!("What")
+                }
+
+            }
+            col += 1;
+        }
+        tokens.push(Token::EndOfFile);
         Ok(tokens)
     }
 }

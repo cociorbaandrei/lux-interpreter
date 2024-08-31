@@ -5,7 +5,7 @@ use std::env;
 use std::fs;
 use std::io::{self, Write};
 use anyhow::Ok;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use tokenizer::Tokenizer;
 
 fn main() -> Result<()> {
@@ -21,8 +21,12 @@ fn main() -> Result<()> {
     match command.as_str() {
         "tokenize" => {
             let file_contents = fs::read_to_string(filename)?;
-            let tokenizer = Tokenizer::new(file_contents)?;
-            for token in tokenizer.get_tokens()? {
+            if file_contents.is_empty() {
+                println!("EOF  null");
+                return Ok(());
+            }
+            let tokenizer = Tokenizer::new(file_contents);
+            for token in tokenizer?.get_tokens()? {
                 println!("{}", token);
             }
         }
