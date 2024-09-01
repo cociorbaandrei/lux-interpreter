@@ -11,13 +11,20 @@ pub enum Token {
     Plus(String, u32, u32),
     Minus(String, u32, u32),
     Semicolon(String, u32, u32),
-    Divide(String, u32, u32),
-    Equals(String, u32, u32),
-    EqualsEquals(String, u32, u32),
+    Slash(String, u32, u32),
+    Equal(String, u32, u32),
+    EqualEqual(String, u32, u32),
+    Bang(String, u32, u32),
+    BangEqual(String, u32, u32),
+    Less(String, u32, u32),
+    LessEqual(String, u32, u32),
+    Greater(String, u32, u32),
+    GreaterEqual(String, u32, u32),
     Colon(String, u32, u32),
     Error(String),
     Number(String, u32, u32, f64),
     Identifier(String, u32, u32, String),
+    String(String, u32, u32, String),
     EndOfFile,
 }
 
@@ -44,22 +51,41 @@ impl fmt::Display for Token {
             Token::Semicolon(lexeme, line, col) => {
                 write!(f, "{} {} {}", "SEMICOLON", lexeme, "null")
             }
-            Token::Divide(lexeme, line, col) => write!(f, "{} {} {}", "DIVIDE", lexeme, "null"),
+            Token::Slash(lexeme, line, col) => write!(f, "{} {} {}", "SLASH", lexeme, "null"),
             Token::Number(lexeme, line, col, ident) => {
-                write!(f, "{} {} {}", "NUMBER", lexeme, ident)
+                if ident.trunc() == *ident {
+                    write!(f, "{} {} {:.1}", "NUMBER", lexeme, ident)
+                } else {
+                    write!(f, "{} {} {}", "NUMBER", lexeme, ident)
+                }
+               
             }
             Token::Error(err) => write!(f, "{}", err),
             Token::EndOfFile => {
                 write!(f, "EOF  null")
             }
             Token::Identifier(lexeme, line, col, ident) => {
-                write!(f, "{} {} {}", "IDENTIFIER", lexeme, ident)
+                write!(f, "{} {} {}", "IDENTIFIER", lexeme, "null")
             }
-            Token::Equals(lexeme, line, col) => write!(f, "{} {} {}", "EQUALS", lexeme, "null"),
-            Token::EqualsEquals(lexeme, line, col) => {
-                write!(f, "{} {} {}", "EQUALS_EQUALS", lexeme, "null")
+            Token::Equal(lexeme, line, col) => write!(f, "{} {} {}", "EQUAL", lexeme, "null"),
+            Token::EqualEqual(lexeme, line, col) => {
+                write!(f, "{} {} {}", "EQUAL_EQUAL", lexeme, "null")
             }
             Token::Colon(lexeme, line, col) => write!(f, "{} {} {}", "COLON", lexeme, "null"),
+            Token::Bang(lexeme, line, col) => write!(f, "{} {} {}", "BANG", lexeme, "null"),
+            Token::BangEqual(lexeme, line, col) => {
+                write!(f, "{} {} {}", "BANG_EQUAL", lexeme, "null")
+            }
+            Token::Less(lexeme, line, col) => write!(f, "{} {} {}", "LESS", lexeme, "null"),
+            Token::LessEqual(lexeme, line, col) => {
+                write!(f, "{} {} {}", "LESS_EQUAL", lexeme, "null")
+            }
+            Token::Greater(lexeme, line, col) => write!(f, "{} {} {}", "GREATER", lexeme, "null"),
+            Token::GreaterEqual(lexeme, line, col) => {
+                write!(f, "{} {} {}", "GREATER_EQUAL", lexeme, "null")
+            }
+            Token::String(lexeme, line, col, ident) =>  
+             write!(f, "{} {} {}", "STRING", lexeme, ident),
         }
     }
 }
