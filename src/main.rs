@@ -1,11 +1,14 @@
+
 mod tokenizer;
 mod token;
+mod parser;
 use std::env;
 use std::fs;
 use std::io::{ self, Write };
 use tokenizer::Tokenizer;
 use std::process::ExitCode;
 use core::result::Result::Ok;
+
 fn main() -> ExitCode {
 	let args: Vec<String> = env::args().collect();
 	if args.len() < 3 {
@@ -28,11 +31,7 @@ fn main() -> ExitCode {
 			}
 			let tokenizer = Tokenizer::new(file_contents);
 
-			let toks = match tokenizer.get_tokens() {
-				Ok(t) => t,
-				Err(_) => todo!(),
-			};
-			for token in toks {
+			for token in tokenizer.iter() {
 				match token {
 					token::Token::Error(err) => {
 						has_err = true;

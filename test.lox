@@ -1,2 +1,6 @@
-10.1223;
-var n: u32 = 24.5;
+// This is a complex test case
+str1 = "Test"
+str2 = "Case"
+num1 = 100
+num2 = 200.00
+result = (str1 == str2) != ((num1 + num2) >= 300)

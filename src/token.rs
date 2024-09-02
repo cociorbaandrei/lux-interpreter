@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     LeftParen(String, u32, u32),
     RightParen(String, u32, u32),
@@ -74,7 +75,6 @@ impl fmt::Display for Token {
                 } else {
                     write!(f, "{} {} {}", "NUMBER", lexeme, ident)
                 }
-               
             }
             Token::Error(err) => write!(f, "{}", err),
             Token::EndOfFile => {
@@ -100,24 +100,25 @@ impl fmt::Display for Token {
             Token::GreaterEqual(lexeme, line, col) => {
                 write!(f, "{} {} {}", "GREATER_EQUAL", lexeme, "null")
             }
-            Token::String(lexeme, line, col, ident) =>  
-             write!(f, "{} {} {}", "STRING", lexeme, ident),
-                         Token::And(lexeme, line, col) =>   write!(f, "{} {} {}", "AND", lexeme, "null"),
-                         Token::Class(lexeme, line, col) => write!(f, "{} {} {}", "CLASS", lexeme, "null"),
-                         Token::Else(lexeme, line, col) => write!(f, "{} {} {}", "ELSE", lexeme, "null"),
-                         Token::False(lexeme, line, col) =>write!(f, "{} {} {}", "FALSE", lexeme, "null"),
-                         Token::For(lexeme, line, col) =>write!(f, "{} {} {}", "FOR", lexeme, "null"),
-                         Token::Fun(lexeme, line, col) => write!(f, "{} {} {}", "FUN", lexeme, "null"),
-                         Token::If(lexeme, line, col) => write!(f, "{} {} {}", "IF", lexeme, "null"),
-                         Token::Nil(lexeme, line, col) => write!(f, "{} {} {}", "NIL", lexeme, "null"),
-                         Token::Or(lexeme, line, col) =>write!(f, "{} {} {}", "OR", lexeme, "null"),
-                         Token::Print(lexeme, line, col) =>write!(f, "{} {} {}", "PRINT", lexeme, "null"),
-                         Token::Return(lexeme, line, col) =>write!(f, "{} {} {}", "RETURN", lexeme, "null"),
-                         Token::Super(lexeme, line, col) =>write!(f, "{} {} {}", "SUPER", lexeme, "null"),
-                         Token::This(lexeme, line, col) => write!(f, "{} {} {}", "THIS", lexeme, "null"),
-                         Token::True(lexeme, line, col) => write!(f, "{} {} {}", "TRUE", lexeme, "null"),
-                         Token::Var(lexeme, line, col) => write!(f, "{} {} {}", "VAR", lexeme, "null"),
-                         Token::While(lexeme, line, col) => write!(f, "{} {} {}", "WHILE", lexeme, "null"),
+            Token::String(lexeme, line, col, ident) => {
+                write!(f, "{} {} {}", "STRING", lexeme, ident)
+            }
+            Token::And(lexeme, line, col) => write!(f, "{} {} {}", "AND", lexeme, "null"),
+            Token::Class(lexeme, line, col) => write!(f, "{} {} {}", "CLASS", lexeme, "null"),
+            Token::Else(lexeme, line, col) => write!(f, "{} {} {}", "ELSE", lexeme, "null"),
+            Token::False(lexeme, line, col) => write!(f, "{} {} {}", "FALSE", lexeme, "null"),
+            Token::For(lexeme, line, col) => write!(f, "{} {} {}", "FOR", lexeme, "null"),
+            Token::Fun(lexeme, line, col) => write!(f, "{} {} {}", "FUN", lexeme, "null"),
+            Token::If(lexeme, line, col) => write!(f, "{} {} {}", "IF", lexeme, "null"),
+            Token::Nil(lexeme, line, col) => write!(f, "{} {} {}", "NIL", lexeme, "null"),
+            Token::Or(lexeme, line, col) => write!(f, "{} {} {}", "OR", lexeme, "null"),
+            Token::Print(lexeme, line, col) => write!(f, "{} {} {}", "PRINT", lexeme, "null"),
+            Token::Return(lexeme, line, col) => write!(f, "{} {} {}", "RETURN", lexeme, "null"),
+            Token::Super(lexeme, line, col) => write!(f, "{} {} {}", "SUPER", lexeme, "null"),
+            Token::This(lexeme, line, col) => write!(f, "{} {} {}", "THIS", lexeme, "null"),
+            Token::True(lexeme, line, col) => write!(f, "{} {} {}", "TRUE", lexeme, "null"),
+            Token::Var(lexeme, line, col) => write!(f, "{} {} {}", "VAR", lexeme, "null"),
+            Token::While(lexeme, line, col) => write!(f, "{} {} {}", "WHILE", lexeme, "null"),
         }
     }
 }
