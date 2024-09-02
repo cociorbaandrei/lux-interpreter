@@ -3,7 +3,6 @@ mod token;
 use std::env;
 use std::fs;
 use std::io::{ self, Write };
-use anyhow::Result;
 use tokenizer::Tokenizer;
 use std::process::ExitCode;
 use core::result::Result::Ok;

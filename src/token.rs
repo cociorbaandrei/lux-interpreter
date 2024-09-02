@@ -25,6 +25,22 @@ pub enum Token {
     Number(String, u32, u32, f64),
     Identifier(String, u32, u32, String),
     String(String, u32, u32, String),
+    And(String, u32, u32),
+    Class(String, u32, u32),
+    Else(String, u32, u32),
+    False(String, u32, u32),
+    For(String, u32, u32),
+    Fun(String, u32, u32),
+    If(String, u32, u32),
+    Nil(String, u32, u32),
+    Or(String, u32, u32),
+    Print(String, u32, u32),
+    Return(String, u32, u32),
+    Super(String, u32, u32),
+    This(String, u32, u32),
+    True(String, u32, u32),
+    Var(String, u32, u32),
+    While(String, u32, u32),
     EndOfFile,
 }
 
@@ -86,6 +102,22 @@ impl fmt::Display for Token {
             }
             Token::String(lexeme, line, col, ident) =>  
              write!(f, "{} {} {}", "STRING", lexeme, ident),
+                         Token::And(lexeme, line, col) =>   write!(f, "{} {} {}", "AND", lexeme, "null"),
+                         Token::Class(lexeme, line, col) => write!(f, "{} {} {}", "CLASS", lexeme, "null"),
+                         Token::Else(lexeme, line, col) => write!(f, "{} {} {}", "ELSE", lexeme, "null"),
+                         Token::False(lexeme, line, col) =>write!(f, "{} {} {}", "FALSE", lexeme, "null"),
+                         Token::For(lexeme, line, col) =>write!(f, "{} {} {}", "FOR", lexeme, "null"),
+                         Token::Fun(lexeme, line, col) => write!(f, "{} {} {}", "FUN", lexeme, "null"),
+                         Token::If(lexeme, line, col) => write!(f, "{} {} {}", "IF", lexeme, "null"),
+                         Token::Nil(lexeme, line, col) => write!(f, "{} {} {}", "NIL", lexeme, "null"),
+                         Token::Or(lexeme, line, col) =>write!(f, "{} {} {}", "OR", lexeme, "null"),
+                         Token::Print(lexeme, line, col) =>write!(f, "{} {} {}", "PRINT", lexeme, "null"),
+                         Token::Return(lexeme, line, col) =>write!(f, "{} {} {}", "RETURN", lexeme, "null"),
+                         Token::Super(lexeme, line, col) =>write!(f, "{} {} {}", "SUPER", lexeme, "null"),
+                         Token::This(lexeme, line, col) => write!(f, "{} {} {}", "THIS", lexeme, "null"),
+                         Token::True(lexeme, line, col) => write!(f, "{} {} {}", "TRUE", lexeme, "null"),
+                         Token::Var(lexeme, line, col) => write!(f, "{} {} {}", "VAR", lexeme, "null"),
+                         Token::While(lexeme, line, col) => write!(f, "{} {} {}", "WHILE", lexeme, "null"),
         }
     }
 }

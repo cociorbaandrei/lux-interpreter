@@ -1,10 +1,7 @@
-use std::array::from_fn;
-use std::borrow::Borrow;
 use std::iter;
 
 use crate::token::Token;
 
-use anyhow::anyhow;
 use anyhow::Ok;
 use anyhow::Result;
 
@@ -41,7 +38,7 @@ impl Tokenizer {
                             iter.by_ref().next_if(|c| *c != '\"' && (c.is_alphabetic() || c.is_ascii_whitespace() || c.is_alphanumeric() || c.is_ascii()))
                         }))
                         .collect::<String>();
-                    if(iter.peek() == Some(&'\"')){
+                    if iter.peek() == Some(&'\"') {
                         iter.next();
                         let noquote = (&identifier[1..]).to_owned();
                         let s = identifier + "\"";
@@ -110,7 +107,7 @@ impl Tokenizer {
                     }
                 }
                 ':' => tokens.push(Token::Colon(ch.to_string(), line, col)),
-                '1'..='9' => {
+                '0'..='9' => {
                     let n = iter::once(ch) // Start with the initial digit
                         .chain(std::iter::from_fn(|| {
                             iter.by_ref().next_if(|c| (c.is_ascii_digit() || *c == '.'))
@@ -130,7 +127,28 @@ impl Tokenizer {
                         .collect::<String>()
                         .parse()?;
                     col += identifier.len() as u32;
-                    tokens.push(Token::Identifier(identifier.clone(), line, col, identifier));
+                    match identifier.as_str() {
+                        "and" =>  tokens.push(Token::And(identifier.clone(), line, col)),
+                        "class" =>  tokens.push(Token::Class(identifier.clone(), line, col)),
+                        "else" =>  tokens.push(Token::Else(identifier.clone(), line, col)),
+                        "false" =>  tokens.push(Token::False(identifier.clone(), line, col)),
+                        "for" =>  tokens.push(Token::For(identifier.clone(), line, col)),
+                        "fun" =>  tokens.push(Token::Fun(identifier.clone(), line, col)),
+                        "if" =>  tokens.push(Token::If(identifier.clone(), line, col)),
+                        "nil" =>  tokens.push(Token::Nil(identifier.clone(), line, col)),
+                        "or" =>  tokens.push(Token::Or(identifier.clone(), line, col)),
+                        "print" =>  tokens.push(Token::Print(identifier.clone(), line, col)),
+                        "return" =>  tokens.push(Token::Return(identifier.clone(), line, col)),
+                        "super" =>  tokens.push(Token::Super(identifier.clone(), line, col)),
+                        "this" =>  tokens.push(Token::This(identifier.clone(), line, col)),
+                        "true" =>  tokens.push(Token::True(identifier.clone(), line, col)),
+                        "var" =>  tokens.push(Token::Var(identifier.clone(), line, col)),
+                        "while" =>  tokens.push(Token::While(identifier.clone(), line, col)),
+                        _ => {
+                            tokens.push(Token::Identifier(identifier.clone(), line, col, identifier));
+                        }
+                    }
+                    
                 }
                 ' ' => {
                     col += 1;
