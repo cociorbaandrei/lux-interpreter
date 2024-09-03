@@ -1,6 +1,4 @@
-
-
-use std::io::{ self, Write };
+use std::io::{self, Write};
 use std::iter;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -14,18 +12,18 @@ pub struct Tokenizer {
     file_content: String,
 }
 
-pub struct TokenIter<'a>{
-    iter : Peekable<Chars<'a>>,
-    line : u32,
-    col : u32
+pub struct TokenIter<'a> {
+    iter: Peekable<Chars<'a>>,
+    line: u32,
+    col: u32,
 }
 
 impl Tokenizer {
     pub fn iter(&self) -> TokenIter {
-        TokenIter{
+        TokenIter {
             iter: self.file_content.chars().peekable(),
-            line: 0,
-            col: 0
+            line: 1,
+            col: 0,
         }
     }
 }
@@ -34,7 +32,7 @@ impl<'a> Iterator for TokenIter<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        loop{
+        loop {
             if let Some(ch) = self.iter.next() {
                 match ch {
                     '(' => return Some(Token::LeftParen(ch.to_string(), self.line, self.col)),
@@ -46,30 +44,36 @@ impl<'a> Iterator for TokenIter<'a> {
                     ',' => return Some(Token::Comma(ch.to_string(), self.line, self.col)),
                     '+' => return Some(Token::Plus(ch.to_string(), self.line, self.col)),
                     '-' => return Some(Token::Minus(ch.to_string(), self.line, self.col)),
-                    ';' => return Some(Token::Semicolon(ch.to_string(),self.line, self.col)),
+                    ';' => return Some(Token::Semicolon(ch.to_string(), self.line, self.col)),
                     '\"' => {
                         let identifier: String = iter::once(ch)
                             .chain(std::iter::from_fn(|| {
-                                self.iter.by_ref().next_if(|c| *c != '\"' && (c.is_alphabetic() || c.is_ascii_whitespace() || c.is_alphanumeric() || c.is_ascii()))
+                                self.iter.by_ref().next_if(|c| {
+                                    *c != '\"'
+                                        && (c.is_alphabetic()
+                                            || c.is_ascii_whitespace()
+                                            || c.is_alphanumeric()
+                                            || c.is_ascii())
+                                })
                             }))
                             .collect::<String>();
                         if self.iter.peek() == Some(&'\"') {
                             self.iter.next();
                             let noquote = (&identifier[1..]).to_owned();
                             let s = identifier + "\"";
-    
-                            return Some(Token::String(s, self.line, self.col, noquote))
-                        }else {
+
+                            return Some(Token::String(s, self.line, self.col, noquote));
+                        } else {
                             return Some(Token::Error(format!(
-                                "[line {}] Error: Unterminated string.", self.line
+                                "[line {}] Error: Unterminated string.",
+                                self.line
                             )));
-                           // writeln!(io::stderr(),     "[line {}] Error: Unterminated string.",self.line).unwrap();
+                            // writeln!(io::stderr(),     "[line {}] Error: Unterminated string.",self.line).unwrap();
                             // println!(
                             //     "[line {}] Error: Unterminated string.",self.line
                             // );
                             continue;
                         }
-                            
                     }
                     '/' => {
                         if self.iter.peek() == Some(&'/') {
@@ -109,7 +113,7 @@ impl<'a> Iterator for TokenIter<'a> {
                             .chain(self.iter.by_ref().next_if_eq(&'='))
                             .collect::<String>();
                         if beq == "!=" {
-                           return Some(Token::BangEqual(beq.to_string(), self.line, self.col));
+                            return Some(Token::BangEqual(beq.to_string(), self.line, self.col));
                         } else {
                             return Some(Token::Bang(ch.to_string(), self.line, self.col));
                         }
@@ -128,45 +132,91 @@ impl<'a> Iterator for TokenIter<'a> {
                     '0'..='9' => {
                         let n = iter::once(ch) // Start with the initial digit
                             .chain(std::iter::from_fn(|| {
-                                self.iter.by_ref().next_if(|c| (c.is_ascii_digit() || *c == '.'))
+                                self.iter
+                                    .by_ref()
+                                    .next_if(|c| (c.is_ascii_digit() || *c == '.'))
                             })) // Chain subsequent digits
                             .collect::<String>(); // Collect them into a String
-                            // Parse the string into an i64
-                            self.col += n.to_string().len() as u32;
-    
+                                                  // Parse the string into an i64
+                        self.col += n.to_string().len() as u32;
+
                         // Push the number token
-                        return Some(Token::Number(n.clone(), self.line, self.col, n.parse().unwrap()));
+                        return Some(Token::Number(
+                            n.clone(),
+                            self.line,
+                            self.col,
+                            n.parse().unwrap(),
+                        ));
                     }
                     '_' | 'A'..='z' => {
                         let identifier: String = iter::once(ch)
                             .chain(std::iter::from_fn(|| {
-                                self.iter.by_ref().next_if(|c| c.is_alphanumeric() || *c=='_')
+                                self.iter
+                                    .by_ref()
+                                    .next_if(|c| c.is_alphanumeric() || *c == '_')
                             }))
                             .collect::<String>()
-                            .parse().unwrap();
+                            .parse()
+                            .unwrap();
                         self.col += identifier.len() as u32;
                         match identifier.as_str() {
-                            "and" =>  return Some(Token::And(identifier.clone(), self.line, self.col)),
-                            "class" =>  return Some(Token::Class(identifier.clone(), self.line, self.col)),
-                            "else" =>  return Some(Token::Else(identifier.clone(), self.line, self.col)),
-                            "false" =>  return Some(Token::False(identifier.clone(), self.line, self.col)),
-                            "for" =>  return Some(Token::For(identifier.clone(), self.line, self.col)),
-                            "fun" =>  return Some(Token::Fun(identifier.clone(), self.line, self.col)),
-                            "if" =>  return Some(Token::If(identifier.clone(), self.line, self.col)),
-                            "nil" =>  return Some(Token::Nil(identifier.clone(), self.line, self.col)),
-                            "or" =>  return Some(Token::Or(identifier.clone(), self.line, self.col)),
-                            "print" =>  return Some(Token::Print(identifier.clone(), self.line, self.col)),
-                            "return" =>  return Some(Token::Return(identifier.clone(), self.line, self.col)),
-                            "super" =>  return Some(Token::Super(identifier.clone(), self.line, self.col)),
-                            "this" =>  return Some(Token::This(identifier.clone(), self.line, self.col)),
-                            "true" =>  return Some(Token::True(identifier.clone(), self.line, self.col)),
-                            "var" =>  return Some(Token::Var(identifier.clone(), self.line, self.col)),
-                            "while" =>  return Some(Token::While(identifier.clone(), self.line, self.col)),
+                            "and" => {
+                                return Some(Token::And(identifier.clone(), self.line, self.col))
+                            }
+                            "class" => {
+                                return Some(Token::Class(identifier.clone(), self.line, self.col))
+                            }
+                            "else" => {
+                                return Some(Token::Else(identifier.clone(), self.line, self.col))
+                            }
+                            "false" => {
+                                return Some(Token::False(identifier.clone(), self.line, self.col))
+                            }
+                            "for" => {
+                                return Some(Token::For(identifier.clone(), self.line, self.col))
+                            }
+                            "fun" => {
+                                return Some(Token::Fun(identifier.clone(), self.line, self.col))
+                            }
+                            "if" => {
+                                return Some(Token::If(identifier.clone(), self.line, self.col))
+                            }
+                            "nil" => {
+                                return Some(Token::Nil(identifier.clone(), self.line, self.col))
+                            }
+                            "or" => {
+                                return Some(Token::Or(identifier.clone(), self.line, self.col))
+                            }
+                            "print" => {
+                                return Some(Token::Print(identifier.clone(), self.line, self.col))
+                            }
+                            "return" => {
+                                return Some(Token::Return(identifier.clone(), self.line, self.col))
+                            }
+                            "super" => {
+                                return Some(Token::Super(identifier.clone(), self.line, self.col))
+                            }
+                            "this" => {
+                                return Some(Token::This(identifier.clone(), self.line, self.col))
+                            }
+                            "true" => {
+                                return Some(Token::True(identifier.clone(), self.line, self.col))
+                            }
+                            "var" => {
+                                return Some(Token::Var(identifier.clone(), self.line, self.col))
+                            }
+                            "while" => {
+                                return Some(Token::While(identifier.clone(), self.line, self.col))
+                            }
                             _ => {
-                                return Some(Token::Identifier(identifier.clone(), self.line, self.col, identifier));
+                                return Some(Token::Identifier(
+                                    identifier.clone(),
+                                    self.line,
+                                    self.col,
+                                    identifier,
+                                ));
                             }
                         }
-                        
                     }
                     ' ' => {
                         self.col += 1;
@@ -181,13 +231,15 @@ impl<'a> Iterator for TokenIter<'a> {
                         self.col = 0;
                         continue;
                     }
-                    '\r' => {continue;}
+                    '\r' => {
+                        continue;
+                    }
                     _ => {
                         return Some(Token::Error(format!(
-                            "[line {}] Error: Unexpected character: {}",self.line,
-                            ch
+                            "[line {}] Error: Unexpected character: {}",
+                            self.line, ch
                         )));
-                       // writeln!(io::stderr(),  "[line {}] Error: Unexpected character: {}", self.line, ch).unwrap();
+                        // writeln!(io::stderr(),  "[line {}] Error: Unexpected character: {}", self.line, ch).unwrap();
                         // println!(
                         //     "[line {}] Error: Unexpected character: {}",
                         //     self.line, ch
@@ -195,16 +247,14 @@ impl<'a> Iterator for TokenIter<'a> {
                     }
                 }
             } else {
-                return None
-                
+                return None;
             }
         }
-       
     }
 }
 
 #[test]
-fn test_iterator(){
+fn test_iterator() {
     let tokenizer = Tokenizer::new("2+3+5/(2+1)".into());
     let mut i = tokenizer.iter().peekable();
     println!("{:#?}", i.next());
@@ -219,7 +269,6 @@ fn test_iterator(){
         println!("{}", token);
     }
     //let parser = Parser::new(&mut tokenizer.iter().peekable());
-    
 }
 
 impl Tokenizer {
@@ -234,7 +283,7 @@ impl Tokenizer {
     //     let mut line: u32 = 1;
     //     let mut col: u32 = 0;
     //     while let Some(ch) = iter.next() {
-    
+
     //         match ch {
     //             '(' => tokens.push(Token::LeftParen(ch.to_string(), line, col)),
     //             ')' => tokens.push(Token::RightParen(ch.to_string(), line, col)),
@@ -266,7 +315,7 @@ impl Tokenizer {
     //                     //     "[line {line}] Error: Unterminated string."
     //                     // );
     //                 }
-                        
+
     //             }
     //             '/' => {
     //                 if iter.peek() == Some(&'/') {
@@ -362,7 +411,7 @@ impl Tokenizer {
     //                         tokens.push(Token::Identifier(identifier.clone(), line, col, identifier));
     //                     }
     //                 }
-                    
+
     //             }
     //             ' ' => {
     //                 col += 1;
