@@ -1,3 +1,4 @@
+mod interpreter;
 mod parser;
 mod token;
 mod tokenizer;
@@ -57,7 +58,10 @@ fn main() -> ExitCode {
             let e = parser.parse();
             match e {
                 Ok(e) => println!("{}", e.pprint()),
-                Err(_) => return ExitCode::from(65),
+                Err(e) => {
+                    println!("{:?}", e);
+                    return ExitCode::from(65);
+                }
             }
         }
         _ => {
