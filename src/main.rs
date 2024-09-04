@@ -3,6 +3,9 @@ mod parser;
 mod token;
 mod tokenizer;
 use core::result::Result::Ok;
+use std::arch::x86_64;
+use interpreter::RuntimeValue;
+use parser::Expression;
 use parser::Parser;
 use std::env;
 use std::fs;
@@ -59,7 +62,51 @@ fn main() -> ExitCode {
             match e {
                 Ok(e) => println!("{}", e.pprint()),
                 Err(e) => {
-                    println!("{:?}", e);
+                    println!("");
+                    return ExitCode::from(65);
+                }
+            }
+        }
+        "evaluate" => {
+            let file_contents = match fs::read_to_string(filename) {
+                Ok(f) => f,
+                Err(_) => todo!(),
+            };
+            if file_contents.is_empty() {
+                println!("EOF  null");
+                return ExitCode::SUCCESS;
+            }
+            let tokenizer = Tokenizer::new(file_contents);
+            let mut iter = tokenizer.iter().peekable();
+            let mut parser = Parser::new(&mut iter);
+            let e = parser.parse();
+            match e {
+                Ok(e) => {
+                    let eval =  e.eval();
+                    match eval {
+                        Ok(RuntimeValue::Number(x)) => {
+                            println!("{}", x);
+                        },
+                        Ok(RuntimeValue::String(x)) => {
+                            println!("{}", x);
+                        },
+                        Ok(RuntimeValue::Boolean(x)) => {
+                            println!("{}", x);
+                        },
+                        Ok(RuntimeValue::Nil) => {
+                            println!("nil");
+                        },
+                        Err(e) =>   {
+                            //println!("{}", e);
+                            writeln!(io::stderr(), "{}", e);
+                            return ExitCode::from(70);
+                    },
+                        _ => {   println!("err")},
+                    }
+                },
+               
+                Err(e) => {
+                    println!("");
                     return ExitCode::from(65);
                 }
             }
