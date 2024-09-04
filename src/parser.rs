@@ -1,5 +1,6 @@
 use std::fmt::Binary;
 use std::iter::Peekable;
+use std::os::linux::raw::stat;
 
 use crate::parser;
 use crate::tokenizer::Tokenizer;
@@ -23,7 +24,7 @@ pub enum Operator {
     GreaterEqual,
     Bang,
     And,
-    Or
+    Or,
 }
 
 #[derive(Debug, PartialEq)]
@@ -35,6 +36,13 @@ pub enum Expression {
     String(String),
     Group(Box<Expression>),
     Nil,
+}
+
+#[derive(Debug)]
+pub enum Statement {
+    Print(Box<Expression>),
+    ExprStmt(Box<Expression>),
+    Program(Vec<Statement>),
 }
 
 impl Expression {
@@ -54,8 +62,8 @@ impl Expression {
                     Operator::Greater => ">".to_string(),
                     Operator::GreaterEqual => ">=".to_string(),
                     Operator::Bang => "!".to_string(),
-                    Operator::And =>  "&&".to_string(),
-                    Operator::Or =>  "||".to_string(),
+                    Operator::And => "&&".to_string(),
+                    Operator::Or => "||".to_string(),
                 };
                 return "(".to_owned() + &op + " " + &left.pprint() + " " + &right.pprint() + ")";
             }
@@ -305,7 +313,7 @@ impl<'a> Parser<'a> {
         }
         Ok(left)
     }
-    fn or(&mut self) -> Result<Expression>{
+    fn or(&mut self) -> Result<Expression> {
         let mut left = self.and()?;
         loop {
             let op = self.iter.peek();
@@ -323,6 +331,35 @@ impl<'a> Parser<'a> {
     fn expression(&mut self) -> Result<Expression> {
         let mut expr = self.or()?;
         Ok(expr)
+    }
+    fn print_stmt(&mut self) -> Result<Statement> {
+        let print = self.iter.next().context("Expected print keyword.")?;
+        let print_stmt = self.expression()?;
+        let semi = self.iter.next().context("Expected ; after expression.")?;
+        Ok(Statement::Print(Box::new(print_stmt)))
+    }
+    fn expr_stmt(&mut self) -> Result<Statement> {
+        let expr_stmt = self.expression()?;
+        let semi = self.iter.next().context("Expected ; after expression.")?;
+        Ok(Statement::ExprStmt(Box::new(expr_stmt)))
+    }
+    fn statement(&mut self) -> Result<Statement> {
+        let next = self.iter.peek();
+        match next {
+            Some(Token::Print(_, _, _)) => self.print_stmt(),
+            _ => self.expr_stmt(),
+        }
+    }
+    fn program(&mut self) -> Result<Statement> {
+        let mut statements = Vec::new();
+        while let Some(token) = self.iter.peek() {
+            statements.push(self.statement()?);
+        }
+        Ok(Statement::Program(statements))
+    }
+    pub fn parse_program(&mut self) -> Result<Statement> {
+        let ast = self.program()?;
+        Ok(ast)
     }
     pub fn parse(&mut self) -> Result<Expression> {
         let ast = self.expression()?;
@@ -476,5 +513,4 @@ fn test_boolean_2() {
 
     println!("{:?}", p);
     println!("{}", p.pprint());
-
 }
