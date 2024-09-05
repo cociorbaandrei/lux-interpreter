@@ -1,6 +1,5 @@
 use std::fmt::Binary;
 use std::iter::Peekable;
-use std::os::linux::raw::stat;
 
 use crate::parser;
 use crate::tokenizer::Tokenizer;
@@ -35,6 +34,7 @@ pub enum Expression {
     Boolean(bool),
     String(String),
     Group(Box<Expression>),
+    Identifier(String),
     Nil,
 }
 
@@ -43,6 +43,7 @@ pub enum Statement {
     Print(Box<Expression>),
     ExprStmt(Box<Expression>),
     Program(Vec<Statement>),
+    Declaration(String, Box<Expression>)
 }
 
 impl Expression {
@@ -97,6 +98,7 @@ impl Expression {
             Expression::String(val) => val.to_owned(),
             Expression::Nil => "nil".to_owned(),
             Expression::Group(expr) => "(group ".to_owned() + &expr.pprint() + ")",
+            Expression::Identifier(s) => s.to_owned(),
         }
     }
 }
@@ -184,6 +186,9 @@ impl<'a> Parser<'a> {
             Token::False(_, _, _) => Ok(Expression::Boolean(false)),
             Token::Nil(_, _, _) => Ok(Expression::Nil),
             Token::String(_, _, _, s) => Ok(Expression::String(s)),
+            Token::Identifier(identifier,_, _, _) => {
+               Ok(Expression::Identifier(identifier))
+            }
             _ => Err(anyhow!("Unexpected")),
         }
     }
@@ -350,13 +355,47 @@ impl<'a> Parser<'a> {
             _ => self.expr_stmt(),
         }
     }
+    pub fn var_decl(&mut self) -> Result<Statement> {
+        let mut next = self.iter.next().context("Expected var declaration.")?;
+        next = self.iter.next().context("Expected identifier .")?;
+        match next {
+            Token::Identifier(ident, _, _, _) =>{
+                let equals = self.iter.peek();
+                match equals{
+                    Some(Token::Equal(_, _, _)) => {
+                        self.iter.next().context("Expected equalks.")?;
+                        let dcl = Statement::Declaration(ident, Box::new(self.expression()?));
+                        let semi = self.iter.next().context("Expected ; after expression.")?;
+                        Ok(dcl)
+                    }
+                    _ => {
+                        let semi = self.iter.next().context("Expected ; after expression.")?;
+                        let dcl = Statement::Declaration(ident, Box::new(Expression::Nil));
+                        Ok(dcl)
+                    }
+                }
+            } 
+            _ => {
+                Err(anyhow!("Expected var declaration."))
+            }
+        }
+    }
+    pub fn declaration(&mut self) ->  Result<Statement> {
+        let next = self.iter.peek();
+        match next {
+            Some(Token::Var(_, _, _)) => self.var_decl(),
+            _ => self.statement(),
+        }
+    }
+
     fn program(&mut self) -> Result<Statement> {
         let mut statements = Vec::new();
         while let Some(token) = self.iter.peek() {
-            statements.push(self.statement()?);
+            statements.push(self.declaration()?);
         }
         Ok(Statement::Program(statements))
     }
+
     pub fn parse_program(&mut self) -> Result<Statement> {
         let ast = self.program()?;
         Ok(ast)

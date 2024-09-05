@@ -3,6 +3,7 @@ mod parser;
 mod token;
 mod tokenizer;
 use core::result::Result::Ok;
+use std::collections::HashMap;
 use interpreter::RuntimeValue;
 use parser::Expression;
 use parser::Parser;
@@ -80,9 +81,10 @@ fn main() -> ExitCode {
             let mut iter = tokenizer.iter().peekable();
             let mut parser = Parser::new(&mut iter);
             let e = parser.parse();
+            let mut varialbes = HashMap::new();
             match e {
                 Ok(e) => {
-                    let eval = e.eval();
+                    let eval = e.eval(&mut varialbes);
                     match eval {
                         Ok(RuntimeValue::Number(x)) => {
                             println!("{}", x);
@@ -128,7 +130,8 @@ fn main() -> ExitCode {
             let e = parser.parse_program();
             match e {
                 Ok(e) => {
-                    let s = e.eval();
+                    let mut varialbes = HashMap::new();
+                    let s = e.eval(&mut varialbes);
                     match s {
                         Ok(_) => {}
                         Err(e) => {

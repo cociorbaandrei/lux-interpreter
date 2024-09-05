@@ -4,8 +4,8 @@ use crate::{
 };
 use anyhow::{anyhow, Context};
 use anyhow::{Ok, Result};
-use std::ops::Add;
-#[derive(Debug, PartialEq, PartialOrd)]
+use std::{collections::HashMap, hash::Hash, ops::Add};
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
 pub enum RuntimeValue {
     Number(f64),
     Boolean(bool),
@@ -229,71 +229,81 @@ impl Add for RuntimeValue {
 }
 
 impl Statement {
-    pub fn eval(&self) -> Result<()> {
+    pub fn eval(&self, variables: &mut HashMap<String, RuntimeValue>) -> Result<()> {
         match self {
             Statement::Print(x) => {
-                let value = x.eval()?;
+                let value = x.eval(variables)?;
                 match value {
                     RuntimeValue::Number(val) => {
                         println!("{}", val);
                     }
                     RuntimeValue::Boolean(val) => println!("{}", val),
                     RuntimeValue::String(val) => println!("{}", val),
-                    RuntimeValue::Nil => todo!(),
+                    RuntimeValue::Nil =>   println!("nil"),
                 }
             }
             Statement::ExprStmt(s) => {
-                s.eval()?;
+                s.eval(variables)?;
             }
 
             Statement::Program(program) => {
                 for statement in program.iter() {
-                    statement.eval()?;
+                    statement.eval(variables)?;
                 }
             }
+            Statement::Declaration(name, var) => {
+                let value = var.eval(variables)?;  
+                variables.insert(name.clone(), value);
+              //  println!("assigning {:#?} to {name}", var.eval(variables)?);
+            },
         }
         Ok(())
     }
 }
 impl Expression {
-    pub fn eval(&self) -> Result<RuntimeValue> {
+    pub fn eval(&self,  variables: &mut HashMap<String, RuntimeValue>) -> Result<RuntimeValue> {
         match self {
-            Expression::Binary(left, Operator::Add, right) => left.eval()? + right.eval()?,
+            Expression::Binary(left, Operator::Add, right) => left.eval(variables)? + right.eval(variables)?,
             Expression::Binary(left, Operator::EqualEqual, right) => {
-                Ok(RuntimeValue::Boolean(left.eval()? == right.eval()?))
+                Ok(RuntimeValue::Boolean(left.eval(variables)? == right.eval(variables)?))
             }
             Expression::Binary(left, Operator::Multiply, right) => {
-                left.eval()?.multiply(right.eval()?)
+                left.eval(variables)?.multiply(right.eval(variables)?)
             }
-            Expression::Binary(left, Operator::Divide, right) => left.eval()?.divide(right.eval()?),
+            Expression::Binary(left, Operator::Divide, right) => left.eval(variables)?.divide(right.eval(variables)?),
             Expression::Binary(left, Operator::Subtract, right) => {
-                left.eval()?.subtract(right.eval()?)
+                left.eval(variables)?.subtract(right.eval(variables)?)
             }
             Expression::Binary(left, Operator::Power, right) => todo!(),
             Expression::Binary(left, Operator::BangEqual, right) => {
-                Ok(RuntimeValue::Boolean(left.eval()? != right.eval()?))
+                Ok(RuntimeValue::Boolean(left.eval(variables)? != right.eval(variables)?))
             }
             Expression::Binary(left, Operator::LessEqual, right) => {
-                left.eval()?.less_than_equal(right.eval()?)
+                left.eval(variables)?.less_than_equal(right.eval(variables)?)
             }
             Expression::Binary(left, Operator::Less, right) => {
-                left.eval()?.less_than(right.eval()?)
+                left.eval(variables)?.less_than(right.eval(variables)?)
             }
             Expression::Binary(left, Operator::Greater, right) => {
-                left.eval()?.greater(right.eval()?)
+                left.eval(variables)?.greater(right.eval(variables)?)
             }
             Expression::Binary(left, Operator::GreaterEqual, right) => {
-                left.eval()?.greater_equal(right.eval()?)
+                left.eval(variables)?.greater_equal(right.eval(variables)?)
             }
-            Expression::Binary(left, Operator::And, right) => left.eval()?.and(right.eval()?),
+            Expression::Binary(left, Operator::And, right) => left.eval(variables)?.and(right.eval(variables)?),
             Expression::Binary(left, Operator::Or, right) => todo!(),
-            Expression::Unary(Operator::Subtract, expr) => expr.eval()?.negate(),
-            Expression::Unary(Operator::Bang, expr) => expr.eval()?.not_and(),
+            Expression::Unary(Operator::Subtract, expr) => expr.eval(variables)?.negate(),
+            Expression::Unary(Operator::Bang, expr) => expr.eval(variables)?.not_and(),
             Expression::Number(val) => Ok(RuntimeValue::Number(*val)),
             Expression::Boolean(val) => Ok(RuntimeValue::Boolean(*val)),
             Expression::String(val) => Ok(RuntimeValue::String(val.into())),
-            Expression::Group(expr) => expr.eval(),
+            Expression::Group(expr) => expr.eval(variables),
             Expression::Nil => Ok(RuntimeValue::Nil),
+            Expression::Identifier(ident) => {
+                let val =variables.get(ident).context(format!("Undefined varialbe '{ident}'."))?.clone();
+                Ok(val)
+                
+            }
             _ => todo!(),
         }
     }
@@ -304,8 +314,8 @@ fn test_add() {
     let tokenizer = Tokenizer::new("1+2+3+4".into());
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
-
-    let p = parser.parse().unwrap().eval().unwrap();
+    let mut varialbes = HashMap::new();
+    let p = parser.parse().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
     assert_eq!(p, RuntimeValue::Number(10.0));
@@ -315,8 +325,8 @@ fn test_add_strings() {
     let tokenizer = Tokenizer::new("\"Hello \" + \"World\"".into());
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
-
-    let p = parser.parse().unwrap().eval().unwrap();
+    let mut varialbes = HashMap::new();
+    let p = parser.parse().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
     assert_eq!(p, RuntimeValue::String("Hello World".into()));
@@ -327,7 +337,8 @@ fn test_bool_logic() {
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
     //println!("{:?}", parser.parse().unwrap());
-    let p = parser.parse().unwrap().eval().unwrap();
+    let mut varialbes = HashMap::new();
+    let p = parser.parse().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
     assert_eq!(p, RuntimeValue::Boolean(true));
@@ -338,7 +349,8 @@ fn test_bool_nil() {
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
     //println!("{:?}", parser.parse().unwrap());
-    let p = parser.parse().unwrap().eval().unwrap();
+    let mut varialbes = HashMap::new();
+    let p = parser.parse().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
     assert_eq!(p, RuntimeValue::Nil);
@@ -350,7 +362,8 @@ fn test_bool_nil_asd() {
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
     //println!("{:?}", parser.parse().unwrap());
-    let p = parser.parse().unwrap().eval().unwrap();
+    let mut varialbes = HashMap::new();
+    let p = parser.parse().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
     assert_eq!(p, RuntimeValue::Nil);
@@ -361,8 +374,9 @@ fn test_long_math_expr() {
     let tokenizer = Tokenizer::new("((2+5)/3 * (1+2+7)/2) / 0.25 * (1/2 + 2/3 + 4/5) + ((3/4 + 4/5) * 10) / 2 + 0.0723 + 0.60002222222222".into());
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
+    let mut varialbes = HashMap::new();
     // println!("{:?}", parser.parse().unwrap());
-    let p = parser.parse().unwrap().eval().unwrap();
+    let p = parser.parse().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
     assert_eq!(p, RuntimeValue::Number(100.2001));
@@ -371,11 +385,27 @@ fn test_long_math_expr() {
 #[test]
 fn test_overflow() {
     //(46 + 85 - 94) > (54 - 46) * 2;
+    let mut varialbes = HashMap::new();
     let tokenizer = Tokenizer::new("(46 + 85 - 94) > (54 - 46) * 2;".into());
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
     // println!("{:?}", parser.parse().unwrap());
-    let p = parser.parse_program().unwrap().eval().unwrap();
+ 
+    let p = parser.parse_program().unwrap().eval(&mut varialbes).unwrap();
+
+    println!("{:?}", p);
+}
+
+
+#[test]
+fn test_var_decl() {
+    //(46 + 85 - 94) > (54 - 46) * 2;
+    let tokenizer = Tokenizer::new("var a;var b;var c = 5;print c;".into());
+    let mut iter = tokenizer.iter().peekable();
+    let mut parser = Parser::new(&mut iter);
+    // println!("{:?}", parser.parse().unwrap());
+    let mut varialbes = HashMap::new();
+    let p = parser.parse_program().unwrap().eval(&mut varialbes).unwrap();
 
     println!("{:?}", p);
 }
