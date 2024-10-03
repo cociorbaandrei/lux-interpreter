@@ -400,12 +400,12 @@ fn test_overflow() {
 #[test]
 fn test_var_decl() {
     //(46 + 85 - 94) > (54 - 46) * 2;
-    let tokenizer = Tokenizer::new("var a;var b;var c = 5;print c;".into());
+    let tokenizer = Tokenizer::new("var a= 1;a=a+1;".into());
     let mut iter = tokenizer.iter().peekable();
     let mut parser = Parser::new(&mut iter);
-    // println!("{:?}", parser.parse().unwrap());
-    let mut varialbes = HashMap::new();
-    let p = parser.parse_program().unwrap().eval(&mut varialbes).unwrap();
+     println!("{:?}", parser.parse_program().unwrap());
+  //  let mut varialbes = HashMap::new();
+  //  let p = parser.parse_program().unwrap().eval(&mut varialbes).unwrap();
 
-    println!("{:?}", p);
+   // println!("{:?}", p);
 }
